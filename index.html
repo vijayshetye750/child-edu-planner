@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Child Education Planner</title>
+    <style>
+        #child-edu-planner {
+            max-width: 420px; 
+            margin: 1.5em auto; 
+            padding: 20px; 
+            border: 1px solid #ccc; 
+            border-radius: 8px; 
+            font-family: sans-serif;
+        }
+        button {
+            width: 100%; 
+            padding: 10px; 
+            background: #0275d8; 
+            color: #fff; 
+            border: none; 
+            border-radius: 4px; 
+            margin-top: 18px; 
+            font-size: 1em;
+        }
+        #edu-results {
+            display: none; 
+            margin-top: 20px; 
+            padding: 16px; 
+            border: 1px dashed #888; 
+            background: #f1f1f1; 
+            border-radius: 6px;
+        }
+    </style>
+</head>
+<body>
+    <div id="child-edu-planner">
+        <h3 style="text-align:center; margin-bottom:18px;">🎓 Child Education Planner</h3>
+        <label for="edu-age-now">Child’s Current Age (years):</label><br>
+        <input id="edu-age-now" type="number" min="0" value="3" style="width:100%;">
+        <label for="edu-age-goal" style="margin-top:12px; display:inline-block;">Age When Funds Are Needed:</label><br>
+        <input id="edu-age-goal" type="number" min="0" value="18" style="width:100%;">
+        <label for="edu-present-cost" style="margin-top:12px; display:inline-block;">Present Cost (₹):</label><br>
+        <input id="edu-present-cost" type="number" value="500000" style="width:100%;">
+        <label for="edu-inflation" style="margin-top:12px; display:inline-block;">Estimated Annual Inflation Rate %:</label><br>
+        <input id="edu-inflation" type="number" step="0.1" value="7" style="width:100%;">
+        <label for="edu-return" style="margin-top:12px; display:inline-block;">Expected Return on Investment %:</label><br>
+        <input id="edu-return" type="number" step="0.1" value="12" style="width:100%;">
+        <label for="edu-savings" style="margin-top:12px; display:inline-block;">(Optional) Current Lump‑Sum Savings (₹):</label><br>
+        <input id="edu-savings" type="number" value="0" style="width:100%;">
+        <button id="edu-calc-button" type="button">Calculate</button>
+        <div id="edu-results">
+            <div><strong>Future Cost:</strong> ₹<span id="edu-future-cost">‑</span></div>
+            <div><strong>Shortfall:</strong> ₹<span id="edu-shortfall">‑</span></div>
+            <div><strong>Monthly SIP:</strong> ₹<span id="edu-sip">‑</span></div>
+            <div><strong>Required Lumpsum Today:</strong> ₹<span id="edu-lumpsum">‑</span></div>
+            <div style="font-size:.85em; color:#555; margin-top:10px;">*Estimates only. Assumes fixed annual compounded inflation and return.</div>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const $ = id => document.getElementById(id);
+        $('edu-calc-button').addEventListener('click', () => {
+            const ageNow = +( $('edu-age-now').value ) || 0;
+            const ageGoal = +( $('edu-age-goal').value ) || ageNow;
+            const years = Math.max(ageGoal - ageNow, 0);
+            const present = +( $('edu-present-cost').value ) || 0;
+            const inflation = +( $('edu-inflation').value ) / 100 || 0;
+            const rate = +( $('edu-return').value ) / 100 || 0;
+            const savings = +( $('edu-savings').value ) || 0;
+
+            const futureCost = present * Math.pow(1 + inflation, years);
+            const futureSavings = savings * Math.pow(1 + rate, years);
+            const shortfall = Math.max(futureCost - futureSavings, 0);
+            const months = years * 12;
+            const rMonth = rate / 12;
+            let sip = 0;
+            if (months > 0 && rMonth > 0) {
+                sip = shortfall * rMonth / (Math.pow(1 + rMonth, months) - 1);
+            } else if (months > 0) {
+                sip = shortfall / months;
+            }
+            const lumpsum = shortfall / Math.pow(1 + rate, years);
+
+            const fmt = val => Number.isFinite(val)
+                ? Math.round(val).toLocaleString('en-IN')
+                : '0';
+            $('edu-future-cost').innerText = fmt(futureCost);
+            $('edu-shortfall').innerText = fmt(shortfall);
+            $('edu-sip').innerText = fmt(sip);
+            $('edu-lumpsum').innerText = fmt(lumpsum);
+
+            $('edu-results').style.display = 'block';
+        });
+    });
+    </script>
+</body>
+</html>
